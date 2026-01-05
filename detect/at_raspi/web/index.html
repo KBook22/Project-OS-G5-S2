@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RPi 5 License Plate OCR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #2c3e50; color: white; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        h1 { margin-bottom: 20px; color: #ecf0f1; }
+        img { width: 100%; max-width: 640px; border-radius: 10px; border: 3px solid #95a5a6; }
+        
+        .btn-group { display: flex; justify-content: center; gap: 15px; margin: 25px 0; flex-wrap: wrap; }
+        
+        .btn { 
+            padding: 15px 25px; 
+            font-size: 18px; cursor: pointer; border-radius: 50px; 
+            font-weight: bold; border: none;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            min-width: 120px;
+        }
+        
+        .btn-scan { background-color: #e74c3c; }
+        .btn-scan:hover { background-color: #c0392b; transform: scale(1.05); }
+        .btn-scan:disabled { background-color: #7f8c8d; transform: none; cursor: default; }
+
+        .btn-freeze { background-color: #3498db; }
+        .btn-freeze:hover { background-color: #2980b9; transform: scale(1.05); }
+        .btn-freeze.active { background-color: #f39c12; } 
+
+        /* เพิ่ม CSS ปุ่ม Clear */
+        .btn-clear { background-color: #95a5a6; }
+        .btn-clear:hover { background-color: #7f8c8d; transform: scale(1.05); }
+
+        .result-box {
+            margin-top: 20px; padding: 20px; background-color: #ecf0f1; 
+            border-radius: 10px; text-align: left; color: #2c3e50;
+        }
+        .result-item { font-size: 28px; margin: 10px 0; font-weight: bold; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
+        .label { font-size: 16px; color: #7f8c8d; font-weight: normal; display: block; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Pi 5 License Plate Scanner</h1>
+    
+    <img src="/video_feed" alt="Video Stream">
+    
+    <div class="btn-group">
+        <button id="freezeBtn" class="btn btn-freeze" onclick="toggleFreeze()">❄️ FREEZE</button>
+        <button id="scanBtn" class="btn btn-scan" onclick="scanPlate()">📷 SCAN</button>
+        <button id="clearBtn" class="btn btn-clear" onclick="clearResults()">🗑️ CLEAR</button>
+    </div>
+    
+    <div class="result-box">
+        <div class="result-item">
+            <span class="label">LICENSE PLATE</span>
+            <span id="res-char">---</span>
+        </div>
+        <div class="result-item">
+            <span class="label">PROVINCE</span>
+            <span id="res-prov">---</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ฟังก์ชัน Scan
+    async function scanPlate() {
+        const btn = document.getElementById('scanBtn');
+        const resChar = document.getElementById('res-char');
+        const resProv = document.getElementById('res-prov');
+        
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+        
+        try {
+            const response = await fetch('/scan');
+            const data = await response.json();
+            
+            resChar.innerText = data.chars;
+            resProv.innerText = data.province;
+            
+        } catch (error) {
+            console.error('Error:', error);
+            resChar.innerText = "Error";
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "📷 SCAN";
+        }
+    }
+
+    // ฟังก์ชัน Toggle Freeze
+    async function toggleFreeze() {
+        const btn = document.getElementById('freezeBtn');
+        try {
+            const response = await fetch('/toggle_freeze', { method: 'POST' });
+            const data = await response.json();
+            if (data.status === "frozen") {
+                btn.innerText = "▶️ RESUME";
+                btn.classList.add("active");
+            } else {
+                btn.innerText = "❄️ FREEZE";
+                btn.classList.remove("active");
+            }
+        } catch (error) { console.error('Error:', error); }
+    }
+
+    // เพิ่มฟังก์ชัน Clear
+    function clearResults() {
+        document.getElementById('res-char').innerText = "---";
+        document.getElementById('res-prov').innerText = "---";
+    }
+</script>
+
+</body>
+</html>
