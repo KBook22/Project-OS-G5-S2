@@ -5,10 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #2c3e50; color: white; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .container { max-width: 1000px; margin: auto; background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
         h1 { margin-bottom: 20px; color: #ecf0f1; }
-        img { width: 100%; max-width: 640px; border-radius: 10px; border: 3px solid #95a5a6; }
         
+        /* Layout สำหรับวางภาพข้างกัน */
+        .video-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .video-box {
+            flex: 1;
+            min-width: 300px;
+            max-width: 640px;
+        }
+        img { width: 100%; border-radius: 10px; border: 3px solid #95a5a6; }
+        
+        /* สไตล์เฉพาะสำหรับกล่อง YOLO */
+        #yoloBox img { border-color: #8e44ad; } 
+
         .btn-group { display: flex; justify-content: center; gap: 15px; margin: 25px 0; flex-wrap: wrap; }
         
         .btn { 
@@ -29,9 +46,12 @@
         .btn-freeze:hover { background-color: #2980b9; transform: scale(1.05); }
         .btn-freeze.active { background-color: #f39c12; } 
 
-        /* เพิ่ม CSS ปุ่ม Clear */
         .btn-clear { background-color: #95a5a6; }
         .btn-clear:hover { background-color: #7f8c8d; transform: scale(1.05); }
+
+        /* ปุ่ม YOLO ใหม่ */
+        .btn-yolo { background-color: #8e44ad; }
+        .btn-yolo:hover { background-color: #9b59b6; transform: scale(1.05); }
 
         .result-box {
             margin-top: 20px; padding: 20px; background-color: #ecf0f1; 
@@ -39,11 +59,7 @@
         }
         .result-item { font-size: 28px; margin: 10px 0; font-weight: bold; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
         .label { font-size: 16px; color: #7f8c8d; font-weight: normal; display: block; margin-bottom: 5px; }
-        .history-box {
-            margin-top: 30px;
-            text-align: left;
-        }
-        /* CSS for log */
+        .history-box { margin-top: 30px; text-align: left; }
         .history-box h3 { color: #ecf0f1; border-bottom: 2px solid #95a5a6; padding-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #2c3e50; border-radius: 8px; overflow: hidden; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #34495e; }
@@ -57,11 +73,23 @@
 <div class="container">
     <h1>Pi 5 License Plate Scanner</h1>
     
-    <img src="/video_feed" alt="Video Stream">
+    <div class="video-wrapper">
+        <div class="video-box">
+            <h3 style="margin-top:0;">🔴 Live View</h3>
+            <img src="/video_feed" alt="Video Stream">
+        </div>
+
+        <div class="video-box" id="yoloBox" style="display:none;">
+            <h3 style="margin-top:0;">🟣 YOLO Crop Check</h3>
+            <img id="yoloImg" src="" alt="YOLO Debug Frame">
+        </div>
+    </div>
     
     <div class="btn-group">
         <button id="freezeBtn" class="btn btn-freeze" onclick="toggleFreeze()">❄️ FREEZE</button>
         <button id="scanBtn" class="btn btn-scan" onclick="scanPlate()">📷 SCAN</button>
+        <button id="yoloBtn" class="btn btn-yolo" onclick="showYoloCrop()">Show YOLO Crop</button>
+        
         <button id="clearBtn" class="btn btn-clear" onclick="clearResults()">🗑️ CLEAR</button>
     </div>
     
@@ -87,13 +115,44 @@
                 </tr>
             </thead>
             <tbody id="historyBody">
-                </tbody>
+            </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    // ฟังก์ชัน Scan
+    // ฟังก์ชัน Show YOLO Crop
+    function showYoloCrop() {
+        const box = document.getElementById('yoloBox');
+        const img = document.getElementById('yoloImg');
+        const btn = document.getElementById('yoloBtn');
+
+        // เปลี่ยนข้อความปุ่มชั่วคราว
+        const originalText = btn.innerText;
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        // ดึงภาพจาก endpoint /debug_yolo โดยใส่ timestamp เพื่อป้องกัน cache
+        const timestamp = new Date().getTime();
+        const newSrc = "/debug_yolo?t=" + timestamp;
+
+        // โหลดภาพใน Background ก่อนแสดงผล
+        const tempImg = new Image();
+        tempImg.onload = function() {
+            img.src = newSrc;
+            box.style.display = "block"; // แสดงกล่อง
+            btn.innerText = originalText;
+            btn.disabled = false;
+        };
+        tempImg.onerror = function() {
+            alert("Error loading YOLO debug frame");
+            btn.innerText = originalText;
+            btn.disabled = false;
+        };
+        tempImg.src = newSrc;
+    }
+
+    // ฟังก์ชัน Scan (คงเดิม)
     async function scanPlate() {
         const btn = document.getElementById('scanBtn');
         const resChar = document.getElementById('res-char');
@@ -108,8 +167,6 @@
             
             resChar.innerText = data.chars;
             resProv.innerText = data.province;
-
-            // บันทึกประวัติเมื่อสแกนสำเร็จ
             addToHistory(data.chars, data.province);
             
         } catch (error) {
@@ -121,7 +178,7 @@
         }
     }
 
-    // ฟังก์ชัน Toggle Freeze
+    // ฟังก์ชัน Toggle Freeze (คงเดิม)
     async function toggleFreeze() {
         const btn = document.getElementById('freezeBtn');
         try {
@@ -137,20 +194,28 @@
         } catch (error) { console.error('Error:', error); }
     }
 
-    // เพิ่มฟังก์ชัน Clear
+    // ฟังก์ชัน Clear (คงเดิม)
     function clearResults() {
         document.getElementById('res-char').innerText = "---";
         document.getElementById('res-prov').innerText = "---";
+        document.getElementById('yoloBox').style.display = "none"; // ซ่อนกล่อง YOLO ด้วยเมื่อกด Clear
     }
-    // ฟังก์ชันเพิ่มประวัติ
-    function addToHistory(char, prov) {
-        if(char === "---" || char === "Error" || !char) return;
 
+    // ฟังก์ชันเพิ่มประวัติการสแกน
+    function addToHistory(char, prov) {
+        // เช็ค undefined, null, empty
+        if (!char || !prov) return;
+        
+        // ถ้าเจอคำพวกนี้ ให้ return ออกไปเลย ไม่ต้องวาดตาราง
+        if (char === "ไม่พบอักษร" || prov === "ไม่พบจังหวัด" || char === "Error") {
+            return;
+        }
+        
         const tbody = document.getElementById('historyBody');
         const now = new Date();
-        const timeString = now.toLocaleTimeString('th-TH');
+        const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
-        const row = tbody.insertRow(0); // แทรกแถวบนสุด
+        const row = tbody.insertRow(0);
 
         const cellTime = row.insertCell(0);
         const cellChar = row.insertCell(1);
