@@ -53,7 +53,7 @@ def init_camera():
 
     # Config: RGB888 เพื่อให้ capture_frame ได้สีที่ถูกต้องสำหรับ AI
     config = picam2.create_video_configuration(
-        main={"size": (1920, 1080), "format": "RGB888"}
+        main={"size": (1280,720), "format": "RGB888"}
     )
     picam2.configure(config)
 
