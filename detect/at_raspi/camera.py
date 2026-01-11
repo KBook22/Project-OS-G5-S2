@@ -50,9 +50,7 @@ def video_feed():
     return StreamingResponse(generate_frames(), media_type="multipart/x-mixed-replace;boundary=frame")
 
 if __name__ == "__main__":
-    # เริ่มต้นกล้อง
+    # ทดสอบกล้อง Raspberry Pi ได้ที่ Port 8020
     init_camera()
-    
-    # เริ่มต้น Web Server บน Port 8020
     print("🚀 Starting Preview Server at http://0.0.0.0:8020")
     uvicorn.run(app, host="0.0.0.0", port=8020)

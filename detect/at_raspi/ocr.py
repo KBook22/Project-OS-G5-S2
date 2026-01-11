@@ -1,6 +1,6 @@
-# ocr.py
 import cv2
 import pytesseract
+import re
 from PIL import Image
 from config import (
     CHAR_CLASS_ID,
@@ -8,10 +8,8 @@ from config import (
     TESSERACT_CHAR_CONFIG,
     TESSERACT_PROVINCE_CONFIG
 )
-
 import difflib
-
-# 1. ฐานข้อมูลจังหวัดที่ถูกต้อง (Database)
+# รายชื่อจังหวัดในประเทศไทย สำหรับการตรวจสอบและแก้ไขข้อความ
 THAI_PROVINCES = [
     "กรุงเทพมหานคร", "กระบี่", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท",
     "ชัยภูมิ", "ชุมพร", "เชียงราย", "เชียงใหม่", "ตรัง", "ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา",
@@ -23,24 +21,11 @@ THAI_PROVINCES = [
     "อ่างทอง", "อำนาจเจริญ", "อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี"
 ]
 
-# 2. ฟังก์ชันแก้คำผิด (Logic)
 def fix_province(ocr_text):
-    """
-    รับค่าจังหวัดที่อ่านได้ (อาจจะผิด) -> ส่งคืนจังหวัดที่ถูกต้องที่สุด
-    """
-    if not ocr_text:
-        return ""
-        
-    # ลบขยะก่อนเทียบ
+    if not ocr_text: return ""
     clean_text = ocr_text.replace(" ", "").replace(".", "").replace("-", "")
-    
-    # ใช้ difflib หาคำที่คล้ายที่สุด
     matches = difflib.get_close_matches(clean_text, THAI_PROVINCES, n=1, cutoff=0.4)
-    
-    if matches:
-        return matches[0] # เจอคู่ที่เหมือน!
-    else:
-        return ocr_text   # ไม่เจอที่เหมือนเลย (ส่งค่าเดิมกลับไป)
+    return matches[0] if matches else ocr_text
 
 def run_ocr(frame, detections):
     char_boxes = []
@@ -69,7 +54,10 @@ def run_ocr(frame, detections):
             Image.fromarray(gray),
             config=TESSERACT_CHAR_CONFIG
         )
-        plate_chars = txt.strip().replace(" ", "")
+        
+        # 2. แก้ไข Logic กรองตัวอักษร: เอาเฉพาะ ก-ฮ และ 0-9
+        # Regex [^0-9ก-ฮ] หมายถึง อะไรที่ไม่ใช่เลขและไทย ให้แทนที่ด้วยค่าว่าง
+        plate_chars = re.sub(r'[^0-9ก-ฮ]', '', txt.strip())
 
     if province_box:
         x1, y1, x2, y2 = province_box
@@ -80,8 +68,6 @@ def run_ocr(frame, detections):
             config=TESSERACT_PROVINCE_CONFIG
         )
         plate_province = txt.strip()
-        
-        #send to check province
         plate_province = fix_province(plate_province)
 
     return {

@@ -7,3 +7,5 @@ TESSERACT_PROVINCE_CONFIG = "--psm 6 -l tha"
 
 CHAR_CLASS_ID = 0
 PROVINCE_CLASS_ID = 1
+
+LOG_PATH = "/home/f11man/project-os/logs"
