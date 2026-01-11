@@ -48,7 +48,7 @@ def init_camera():
     if picam2 is not None:
         return
 
-    print("📷 Initializing Camera...")
+    print("Initializing Camera...")
     picam2 = Picamera2()
 
     # Config: RGB888 เพื่อให้ capture_frame ได้สีที่ถูกต้องสำหรับ AI
@@ -63,9 +63,9 @@ def init_camera():
     try:
         picam2.set_controls({"AfMode": 2})
     except Exception as e:
-        print(f"⚠️ AF Warning: {e}")
+        print(f"AF Warning: {e}")
 
-    print("✅ Camera Started (High Performance + OCR Ready)")
+    print("Camera Started (High Performance + OCR Ready)")
 
 def capture_frame():
     """ดึงภาพ Raw (Numpy) จากกล้องทันที (สำหรับ OCR/Detection)"""
@@ -82,10 +82,10 @@ def toggle_freeze():
     
     if is_frozen:
         # จังหวะที่กด Freeze ให้ถ่ายภาพ Raw เก็บไว้เลย เพื่อความคมชัดสูงสุดตอน Scan
-        print("❄️ Freezing frame...")
+        print("Freezing frame...")
         last_raw_frame = capture_frame()
     else:
-        print("▶️ Resuming stream...")
+        print("Resuming stream...")
         last_raw_frame = None
         
     return is_frozen
@@ -95,11 +95,9 @@ def toggle_freeze():
 # -----------------------------
 def generate_frames():
     while True:
-        # ถ้า Freeze อยู่ ให้ส่งภาพเดิมซ้ำๆ (หรือรอเฉยๆ) 
-        # เพื่อประหยัด Bandwidth และ CPU
         if is_frozen:
             time.sleep(0.1)
-            # ถ้ามีภาพค้างเก่า ก็ส่งภาพเดิมไปเพื่อให้ Browser ไม่หมุนติ้ว
+            # ถ้ามีภาพค้างเก่า ส่งภาพเดิมไปให้ Browser
             if latest_jpeg:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + latest_jpeg + b'\r\n')
@@ -122,5 +120,7 @@ def video_feed():
     return StreamingResponse(generate_frames(), media_type="multipart/x-mixed-replace;boundary=frame")
 
 if __name__ == "__main__":
+    # ทดสอบกล้อง Raspberry Pi ได้ที่ Port 8020
     init_camera()
+    print("Starting Preview Server at http://0.0.0.0:8020")
     uvicorn.run(app, host="0.0.0.0", port=8020)

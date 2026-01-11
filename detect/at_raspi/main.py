@@ -64,13 +64,13 @@ def save_log(chars, province):
     date_str = now.strftime("%d-%m-%Y")
     time_str = now.strftime("%H:%M")
     
-    # ระบุ Path เต็ม โดยใช้ LOG_DIR ที่ประกาศไว้ข้างบน
+    # เก็บโดย Path เต็ม โดยใช้ LOG_DIR ที่ประกาศไว้ข้างบน
     filepath = LOG_DIR / f"record-LPR-of-{date_str}.log"
     
     header = f"Record of LPR for {date_str}\n"
     
     mode = 'a'
-    # เช็คว่ามีไฟล์นี้ในโฟลเดอร์ logs หรือไม่
+    # เช็คว่ามีไฟล์นี้ใน Directory หรือไม่
     if not filepath.exists():
         mode = 'w'
         next_num = 1

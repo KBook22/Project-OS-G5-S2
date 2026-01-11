@@ -2,7 +2,7 @@
 from ultralytics import YOLO
 from config import MODEL_PATH
 
-print("🧠 Loading YOLO model...")
+print("Loading YOLO model...")
 model = YOLO(MODEL_PATH)
 
 def detect(frame, conf=0.4):

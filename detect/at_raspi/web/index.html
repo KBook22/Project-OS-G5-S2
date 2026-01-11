@@ -75,22 +75,22 @@
     
     <div class="video-wrapper">
         <div class="video-box">
-            <h3 style="margin-top:0;">🔴 Live View</h3>
+            <h3 style="margin-top:0;">Live View</h3>
             <img src="/video_feed" alt="Video Stream">
         </div>
 
         <div class="video-box" id="yoloBox" style="display:none;">
-            <h3 style="margin-top:0;">🟣 YOLO Crop Check</h3>
+            <h3 style="margin-top:0;">YOLO Crop Check</h3>
             <img id="yoloImg" src="" alt="YOLO Debug Frame">
         </div>
     </div>
     
     <div class="btn-group">
-        <button id="freezeBtn" class="btn btn-freeze" onclick="toggleFreeze()">❄️ FREEZE</button>
-        <button id="scanBtn" class="btn btn-scan" onclick="scanPlate()">📷 SCAN</button>
+        <button id="freezeBtn" class="btn btn-freeze" onclick="toggleFreeze()">FREEZE</button>
+        <button id="scanBtn" class="btn btn-scan" onclick="scanPlate()">SCAN</button>
         <button id="yoloBtn" class="btn btn-yolo" onclick="showYoloCrop()">Show YOLO Crop</button>
         
-        <button id="clearBtn" class="btn btn-clear" onclick="clearResults()">🗑️ CLEAR</button>
+        <button id="clearBtn" class="btn btn-clear" onclick="clearResults()">CLEAR</button>
     </div>
     
     <div class="result-box">
@@ -105,7 +105,7 @@
     </div>
 
     <div class="history-box">
-        <h3>📜 Scan History</h3>
+        <h3>Scan History</h3>
         <table id="historyTable">
             <thead>
                 <tr>
@@ -152,7 +152,7 @@
         tempImg.src = newSrc;
     }
 
-    // ฟังก์ชัน Scan (คงเดิม)
+    // ฟังก์ชัน Scan
     async function scanPlate() {
         const btn = document.getElementById('scanBtn');
         const resChar = document.getElementById('res-char');
@@ -174,7 +174,7 @@
             resChar.innerText = "Error";
         } finally {
             btn.disabled = false;
-            btn.innerText = "📷 SCAN";
+            btn.innerText = "SCAN";
         }
     }
 
@@ -185,10 +185,10 @@
             const response = await fetch('/toggle_freeze', { method: 'POST' });
             const data = await response.json();
             if (data.status === "frozen") {
-                btn.innerText = "▶️ RESUME";
+                btn.innerText = "RESUME";
                 btn.classList.add("active");
             } else {
-                btn.innerText = "❄️ FREEZE";
+                btn.innerText = "FREEZE";
                 btn.classList.remove("active");
             }
         } catch (error) { console.error('Error:', error); }
