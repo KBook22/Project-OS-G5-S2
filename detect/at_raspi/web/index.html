@@ -39,6 +39,17 @@
         }
         .result-item { font-size: 28px; margin: 10px 0; font-weight: bold; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
         .label { font-size: 16px; color: #7f8c8d; font-weight: normal; display: block; margin-bottom: 5px; }
+        .history-box {
+            margin-top: 30px;
+            text-align: left;
+        }
+        /* CSS for log */
+        .history-box h3 { color: #ecf0f1; border-bottom: 2px solid #95a5a6; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #2c3e50; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #34495e; }
+        th { background-color: #2980b9; color: white; }
+        td { color: #bdc3c7; }
+        tr:hover td { background-color: #3e5871; color: white; }
     </style>
 </head>
 <body>
@@ -64,6 +75,21 @@
             <span id="res-prov">---</span>
         </div>
     </div>
+
+    <div class="history-box">
+        <h3>📜 Scan History</h3>
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th width="20%">Time</th>
+                    <th width="40%">Plate</th>
+                    <th>Province</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -82,6 +108,9 @@
             
             resChar.innerText = data.chars;
             resProv.innerText = data.province;
+
+            // บันทึกประวัติเมื่อสแกนสำเร็จ
+            addToHistory(data.chars, data.province);
             
         } catch (error) {
             console.error('Error:', error);
@@ -112,6 +141,24 @@
     function clearResults() {
         document.getElementById('res-char').innerText = "---";
         document.getElementById('res-prov').innerText = "---";
+    }
+    // ฟังก์ชันเพิ่มประวัติ
+    function addToHistory(char, prov) {
+        if(char === "---" || char === "Error" || !char) return;
+
+        const tbody = document.getElementById('historyBody');
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('th-TH');
+
+        const row = tbody.insertRow(0); // แทรกแถวบนสุด
+
+        const cellTime = row.insertCell(0);
+        const cellChar = row.insertCell(1);
+        const cellProv = row.insertCell(2);
+
+        cellTime.innerText = timeString;
+        cellChar.innerText = char;
+        cellProv.innerText = prov;
     }
 </script>
 
